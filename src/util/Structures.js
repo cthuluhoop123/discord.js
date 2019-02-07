@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Allows for the extension of built-in Discord.js structures that are instantiated by {@link DataStore DataStores}.
  */
@@ -18,6 +20,8 @@ class Structures {
 
   /**
    * Extends a structure.
+   * <warn> Make sure to extend all structures before instantiating your client.
+   * Extending after doing so may not work as expected. </warn>
    * @param {string} structure Name of the structure class to extend
    * @param {Function} extender Function that takes the base class to extend as its only parameter and returns the
    * extended class/prototype
@@ -73,6 +77,8 @@ const structures = {
   Message: require('../structures/Message'),
   MessageReaction: require('../structures/MessageReaction'),
   Presence: require('../structures/Presence').Presence,
+  ClientPresence: require('../structures/ClientPresence'),
+  VoiceState: require('../structures/VoiceState'),
   Role: require('../structures/Role'),
   User: require('../structures/User'),
 };

@@ -1,3 +1,5 @@
+'use strict';
+
 const Snowflake = require('../util/Snowflake');
 const Permissions = require('../util/Permissions');
 const Util = require('../util/Util');
@@ -54,7 +56,7 @@ class Role extends Base {
 
     /**
      * The permissions of the role
-     * @type {Permissions}
+     * @type {Readonly<Permissions>}
      */
     this.permissions = new Permissions(data.permissions).freeze();
 
@@ -69,6 +71,12 @@ class Role extends Base {
      * @type {boolean}
      */
     this.mentionable = data.mentionable;
+
+    /**
+     * Whether the role has been deleted
+     * @type {boolean}
+     */
+    this.deleted = false;
   }
 
   /**
@@ -197,7 +205,7 @@ class Role extends Base {
    * Returns `channel.permissionsFor(role)`. Returns permissions for a role in a guild channel,
    * taking into account permission overwrites.
    * @param {ChannelResolvable} channel The guild channel to use as context
-   * @returns {?Permissions}
+   * @returns {Readonly<Permissions>}
    */
   permissionsIn(channel) {
     channel = this.guild.channels.resolve(channel);

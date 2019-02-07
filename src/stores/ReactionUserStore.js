@@ -1,3 +1,6 @@
+'use strict';
+
+const Collection = require('../util/Collection');
 const DataStore = require('./DataStore');
 const { Error } = require('../errors');
 
@@ -17,18 +20,20 @@ class ReactionUserStore extends DataStore {
    * @param {number} [options.limit=100] The maximum amount of users to fetch, defaults to 100
    * @param {Snowflake} [options.before] Limit fetching users to those with an id lower than the supplied id
    * @param {Snowflake} [options.after] Limit fetching users to those with an id greater than the supplied id
-   * @returns {Promise<ReactionUserStore<Snowflake, User>>}
+   * @returns {Promise<Collection<Snowflake, User>>}
    */
   async fetch({ limit = 100, after, before } = {}) {
     const message = this.reaction.message;
-    const users = await this.client.api.channels[message.channel.id].messages[message.id]
+    const data = await this.client.api.channels[message.channel.id].messages[message.id]
       .reactions[this.reaction.emoji.identifier]
       .get({ query: { limit, before, after } });
-    for (const rawUser of users) {
+    const users = new Collection();
+    for (const rawUser of data) {
       const user = this.client.users.add(rawUser);
       this.set(user.id, user);
+      users.set(user.id, user);
     }
-    return this;
+    return users;
   }
 
   /**

@@ -1,25 +1,22 @@
-const handlers = require('./handlers');
+'use strict';
+
+const RequestHandler = require('./RequestHandler');
 const APIRequest = require('./APIRequest');
 const routeBuilder = require('./APIRouter');
 const { Error } = require('../errors');
 const { Endpoints } = require('../util/Constants');
+const Collection = require('../util/Collection');
 
 class RESTManager {
   constructor(client, tokenPrefix = 'Bot') {
     this.client = client;
-    this.handlers = {};
-    this.rateLimitedEndpoints = {};
-    this.globallyRateLimited = false;
+    this.handlers = new Collection();
     this.tokenPrefix = tokenPrefix;
     this.versioned = true;
-    this.timeDifferences = [];
+    this.globalTimeout = null;
     if (client.options.restSweepInterval > 0) {
       client.setInterval(() => {
-        for (const handler in this.handlers) {
-          if (this.handlers[handler]._inactive) {
-            delete this.handlers[handler];
-          }
-        }
+        this.handlers.sweep(handler => handler._inactive);
       }, client.options.restSweepInterval * 1000);
     }
   }
@@ -28,18 +25,9 @@ class RESTManager {
     return routeBuilder(this);
   }
 
-  get timeDifference() {
-    return Math.round(this.timeDifferences.reduce((a, b) => a + b, 0) / this.timeDifferences.length);
-  }
-
-  set timeDifference(ms) {
-    this.timeDifferences.unshift(ms);
-    if (this.timeDifferences.length > 5) this.timeDifferences.length = 5;
-  }
-
   getAuth() {
     const token = this.client.token || this.client.accessToken;
-    const prefixed = !!this.client.application || (this.client.user && this.client.user.bot);
+    const prefixed = !!this.client.application || this.client.user;
     if (token && prefixed) return `${this.tokenPrefix} ${token}`;
     else if (token) return token;
     throw new Error('TOKEN_MISSING');
@@ -55,25 +43,21 @@ class RESTManager {
         request: apiRequest,
         resolve,
         reject,
-      });
+        retries: 0,
+      }).catch(reject);
     });
-  }
-
-  getRequestHandler() {
-    const method = this.client.options.apiRequestMethod;
-    if (typeof method === 'function') return method;
-    const handler = handlers[method];
-    if (!handler) throw new Error('RATELIMIT_INVALID_METHOD');
-    return handler;
   }
 
   request(method, url, options = {}) {
     const apiRequest = new APIRequest(this, method, url, options);
-    if (!this.handlers[apiRequest.route]) {
-      this.handlers[apiRequest.route] = new handlers.RequestHandler(this, this.getRequestHandler());
+    let handler = this.handlers.get(apiRequest.route);
+
+    if (!handler) {
+      handler = new RequestHandler(this);
+      this.handlers.set(apiRequest.route, handler);
     }
 
-    return this.push(this.handlers[apiRequest.route], apiRequest);
+    return this.push(handler, apiRequest);
   }
 
   set endpoint(endpoint) {

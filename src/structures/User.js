@@ -1,6 +1,7 @@
+'use strict';
+
 const TextBasedChannel = require('./interfaces/TextBasedChannel');
 const { Presence } = require('./Presence');
-const UserProfile = require('./UserProfile');
 const Snowflake = require('../util/Snowflake');
 const Base = require('./Base');
 const { Error } = require('../errors');
@@ -53,6 +54,13 @@ class User extends Base {
     if (typeof data.avatar !== 'undefined') this.avatar = data.avatar;
 
     /**
+     * The locale of the user's client (ISO 639-1)
+     * @type {?string}
+     * @name User#locale
+     */
+    if (data.locale) this.locale = data.locale;
+
+    /**
      * The ID of the last message sent by the user, if one was sent
      * @type {?Snowflake}
      */
@@ -99,19 +107,15 @@ class User extends Base {
    * @readonly
    */
   get presence() {
-    if (this.client.presences.has(this.id)) return this.client.presences.get(this.id);
     for (const guild of this.client.guilds.values()) {
       if (guild.presences.has(this.id)) return guild.presences.get(this.id);
     }
-    return new Presence(this.client);
+    return new Presence(this.client, { user: { id: this.id } });
   }
 
   /**
    * A link to the user's avatar.
-   * @param {Object} [options={}] Options for the avatar url
-   * @param {string} [options.format='webp'] One of `webp`, `png`, `jpg`, `gif`. If no format is provided,
-   * it will be `gif` for animated avatars or otherwise `webp`
-   * @param {number} [options.size=128] One of `128`, `256`, `512`, `1024`, `2048`
+   * @param {ImageURLOptions} [options={}] Options for the Image URL
    * @returns {?string}
    */
   avatarURL({ format, size } = {}) {
@@ -131,10 +135,7 @@ class User extends Base {
   /**
    * A link to the user's avatar if they have one.
    * Otherwise a link to their default avatar will be returned.
-   * @param {Object} [options={}] Options for the avatar url
-   * @param {string} [options.format='webp'] One of `webp`, `png`, `jpg`, `gif`. If no format is provided,
-   * it will be `gif` for animated avatars or otherwise `webp`
-   * @param {number} [options.size=128] One of `128`, `256`, `512`, `1024`, `2048`
+   * @param {ImageURLOptions} [options={}] Options for the Image URL
    * @returns {string}
    */
   displayAvatarURL(options) {
@@ -142,22 +143,12 @@ class User extends Base {
   }
 
   /**
-   * The Discord "tag" (e.g. `hydrabolt#0086`) for this user
+   * The Discord "tag" (e.g. `hydrabolt#0001`) for this user
    * @type {string}
    * @readonly
    */
   get tag() {
     return `${this.username}#${this.discriminator}`;
-  }
-
-  /**
-   * The note that is set for the user
-   * <warn>This is only available when using a user account.</warn>
-   * @type {?string}
-   * @readonly
-   */
-  get note() {
-    return this.client.user.notes.get(this.id) || null;
   }
 
   /**
@@ -196,7 +187,7 @@ class User extends Base {
    * @readonly
    */
   get dmChannel() {
-    return this.client.channels.filter(c => c.type === 'dm').find(c => c.recipient.id === this.id) || null;
+    return this.client.channels.find(c => c.type === 'dm' && c.recipient.id === this.id) || null;
   }
 
   /**
@@ -219,26 +210,6 @@ class User extends Base {
     if (!this.dmChannel) return Promise.reject(new Error('USER_NO_DMCHANNEL'));
     return this.client.api.channels(this.dmChannel.id).delete()
       .then(data => this.client.actions.ChannelDelete.handle(data).channel);
-  }
-
-  /**
-   * Gets the profile of the user.
-   * <warn>This is only available when using a user account.</warn>
-   * @returns {Promise<UserProfile>}
-   */
-  fetchProfile() {
-    return this.client.api.users(this.id).profile.get().then(data => new UserProfile(this, data));
-  }
-
-  /**
-   * Sets a note for the user.
-   * <warn>This is only available when using a user account.</warn>
-   * @param {string} note The note to set for the user
-   * @returns {Promise<User>}
-   */
-  setNote(note) {
-    return this.client.api.users('@me').notes(this.id).put({ data: { note } })
-      .then(() => this);
   }
 
   /**

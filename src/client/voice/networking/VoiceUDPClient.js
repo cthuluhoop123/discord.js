@@ -1,3 +1,5 @@
+'use strict';
+
 const udp = require('dgram');
 const { VoiceOPCodes } = require('../../../util/Constants');
 const EventEmitter = require('events');
@@ -104,10 +106,12 @@ class VoiceConnectionUDPClient extends EventEmitter {
           data: {
             address: packet.address,
             port: packet.port,
-            mode: 'xsalsa20_poly1305',
+            mode: this.voiceConnection.authentication.mode,
           },
         },
       });
+
+      socket.on('message', buffer => this.voiceConnection.receiver.packets.push(buffer));
     });
 
     const blankMessage = Buffer.alloc(70);

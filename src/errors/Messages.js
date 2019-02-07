@@ -1,3 +1,5 @@
+'use strict';
+
 const { register } = require('./DJSError');
 
 const Messages = {
@@ -6,13 +8,12 @@ const Messages = {
   TOKEN_INVALID: 'An invalid token was provided.',
   TOKEN_MISSING: 'Request to use token, but token was unavailable to the client.',
 
-  FEATURE_USER_ONLY: 'Only user accounts are able to make use of this feature.',
-
+  WS_CLOSE_REQUESTED: 'WebSocket closed due to user request.',
   WS_CONNECTION_TIMEOUT: 'The connection to the gateway timed out.',
   WS_CONNECTION_EXISTS: 'There is already an existing WebSocket connection.',
   WS_NOT_OPEN: (data = 'data') => `Websocket not open to send ${data}`,
 
-  PERMISSION_INVALID: 'Invalid permission string or number.',
+  BITFIELD_INVALID: 'Invalid bitfield flag or number.',
 
   RATELIMIT_INVALID_METHOD: 'Unknown rate limiting method.',
 
@@ -31,7 +32,6 @@ const Messages = {
   COLOR_RANGE: 'Color must be within the range 0 - 16777215 (0xFFFFFF).',
   COLOR_CONVERT: 'Unable to convert color to a number.',
 
-  EMBED_FIELD_COUNT: 'MessageEmbeds may not exceed 25 fields.',
   EMBED_FIELD_NAME: 'MessageEmbed field names may not be empty.',
   EMBED_FIELD_VALUE: 'MessageEmbed field values may not be empty.',
 
@@ -55,6 +55,8 @@ const Messages = {
   VOICE_PLAY_INTERFACE_BAD_TYPE: 'Unknown stream type',
   VOICE_PRISM_DEMUXERS_NEED_STREAM: 'To play a webm/ogg stream, you need to pass a ReadableStream.',
 
+  VOICE_STATE_UNCACHED_MEMBER: 'The member of this voice state is uncached.',
+
   OPUS_ENGINE_MISSING: 'Couldn\'t find an Opus engine.',
 
   UDP_SEND_FAIL: 'Tried to send a UDP packet, but there is no socket available.',
@@ -73,7 +75,7 @@ const Messages = {
 
   TYPING_COUNT: 'Count must be at least 1',
 
-  SPLIT_MAX_LEN: 'Message exceeds the max length and contains no split characters.',
+  SPLIT_MAX_LEN: 'Chunk exceeds the max length and contains no split characters.',
 
   BAN_RESOLVE_ID: (ban = false) => `Couldn't resolve the user ID to ${ban ? 'ban' : 'unban'}.`,
 
@@ -81,9 +83,8 @@ const Messages = {
 
   SEARCH_CHANNEL_TYPE: 'Target must be a TextChannel, DMChannel, GroupDMChannel, or Guild.',
 
-  MESSAGE_SPLIT_MISSING: 'Message exceeds the max length and contains no split characters.',
-
   GUILD_CHANNEL_RESOLVE: 'Could not resolve channel to a guild channel.',
+  GUILD_VOICE_CHANNEL_RESOLVE: 'Could not resolve channel to a guild voice channel.',
   GUILD_CHANNEL_ORPHAN: 'Could not find a parent to this guild channel.',
   GUILD_OWNED: 'Guild is owned by the client.',
   GUILD_RESTRICTED: (state = false) => `Guild is ${state ? 'already' : 'not'} restricted.`,
@@ -94,8 +95,13 @@ const Messages = {
   WEBHOOK_MESSAGE: 'The message was not sent by a webhook.',
 
   EMOJI_TYPE: 'Emoji must be a string or GuildEmoji/ReactionEmoji',
+  EMOJI_MANAGED: 'Emoji is managed and has no Author.',
+  MISSING_MANAGE_EMOJIS_PERMISSION:
+    guild => `Client must have Manage Emoji permission in guild ${guild} to see emoji authors.`,
 
   REACTION_RESOLVE_USER: 'Couldn\'t resolve the user ID to remove from the reaction.',
+
+  VANITY_URL: 'This guild does not have the VANITY_URL feature enabled.',
 };
 
 for (const [name, message] of Object.entries(Messages)) register(name, message);

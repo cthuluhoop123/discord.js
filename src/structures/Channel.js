@@ -1,3 +1,5 @@
+'use strict';
+
 const Snowflake = require('../util/Snowflake');
 const Base = require('./Base');
 const { ChannelTypes } = require('../util/Constants');
@@ -22,6 +24,12 @@ class Channel extends Base {
      * @type {string}
      */
     this.type = type ? type.toLowerCase() : 'unknown';
+
+    /**
+     * Whether the channel has been deleted
+     * @type {boolean}
+     */
+    this.deleted = false;
 
     if (data) this._patch(data);
   }

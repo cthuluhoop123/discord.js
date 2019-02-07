@@ -1,3 +1,5 @@
+'use strict';
+
 const Collection = require('../util/Collection');
 let Structures;
 
@@ -45,6 +47,10 @@ class DataStore extends Collection {
     if (idOrInstance instanceof this.holds) return idOrInstance.id;
     if (typeof idOrInstance === 'string') return idOrInstance;
     return null;
+  }
+
+  static get [Symbol.species]() {
+    return Collection;
   }
 }
 

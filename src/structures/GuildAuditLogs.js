@@ -1,3 +1,5 @@
+'use strict';
+
 const Collection = require('../util/Collection');
 const Snowflake = require('../util/Snowflake');
 const Webhook = require('./Webhook');
@@ -58,7 +60,7 @@ const Targets = {
  * * INVITE_DELETE: 42
  * * WEBHOOK_CREATE: 50
  * * WEBHOOK_UPDATE: 51
- * * WEBHOOK_DELETE: 50
+ * * WEBHOOK_DELETE: 52
  * * EMOJI_CREATE: 60
  * * EMOJI_UPDATE: 61
  * * EMOJI_DELETE: 62
@@ -148,6 +150,7 @@ class GuildAuditLogs {
    * * An emoji
    * * An invite
    * * A webhook
+   * * An object with an id key if target was deleted
    * * An object where the keys represent either the new value or the old value
    * @typedef {?Object|Guild|User|Role|GuildEmoji|Invite|Webhook} AuditLogEntryTarget
    */
@@ -355,7 +358,7 @@ class GuildAuditLogsEntry {
     } else if (targetType === Targets.MESSAGE) {
       this.target = guild.client.users.get(data.target_id);
     } else {
-      this.target = guild[`${targetType.toLowerCase()}s`].get(data.target_id);
+      this.target = guild[`${targetType.toLowerCase()}s`].get(data.target_id) || { id: data.target_id };
     }
   }
 
